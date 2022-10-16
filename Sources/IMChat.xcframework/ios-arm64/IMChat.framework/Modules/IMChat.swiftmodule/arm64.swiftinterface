@@ -1,0 +1,1377 @@
+// swift-interface-format-version: 1.0
+// swift-compiler-version: Apple Swift version 5.5.1 (swiftlang-1300.0.31.4 clang-1300.0.29.6)
+// swift-module-flags: -target arm64-apple-ios15.0 -enable-objc-interop -enable-library-evolution -swift-version 5 -enforce-exclusivity=checked -O -module-name IMChat
+import AVFoundation
+import AVKit
+import Accelerate
+import Combine
+import CommonCrypto
+import CoreGraphics
+import CoreImage
+import CoreLocation
+import Foundation
+@_exported import IMChat
+import ImageIO
+import MobileCoreServices
+import Swift
+import SwiftUI
+import UIKit
+import _Concurrency
+public protocol AsyncImageDownloadRequestModifier {
+  func modified(for request: Foundation.URLRequest, reportModified: @escaping (Foundation.URLRequest?) -> Swift.Void)
+  var onDownloadTaskStarted: ((IMChat.DownloadTask?) -> Swift.Void)? { get }
+}
+public protocol ImageDownloadRequestModifier : IMChat.AsyncImageDownloadRequestModifier {
+  func modified(for request: Foundation.URLRequest) -> Foundation.URLRequest?
+}
+extension IMChat.ImageDownloadRequestModifier {
+  public func modified(for request: Foundation.URLRequest, reportModified: @escaping (Foundation.URLRequest?) -> Swift.Void)
+  public var onDownloadTaskStarted: ((IMChat.DownloadTask?) -> Swift.Void)? {
+    get
+  }
+}
+public struct AnyModifier : IMChat.ImageDownloadRequestModifier {
+  public func modified(for request: Foundation.URLRequest) -> Foundation.URLRequest?
+  public init(modify: @escaping (Foundation.URLRequest) -> Foundation.URLRequest?)
+}
+@_hasMissingDesignatedInitializers public class SessionDataTask {
+  public typealias CancelToken = Swift.Int
+  public var mutableData: Foundation.Data {
+    get
+  }
+  final public let task: Foundation.URLSessionDataTask
+  @objc deinit
+}
+public typealias KFCrossPlatformImage = UIKit.UIImage
+public typealias KFCrossPlatformColor = UIKit.UIColor
+public typealias KFCrossPlatformImageView = UIKit.UIImageView
+public typealias KFCrossPlatformView = UIKit.UIView
+public typealias KFCrossPlatformButton = UIKit.UIButton
+public struct KingfisherWrapper<Base> {
+  public let base: Base
+  public init(_ base: Base)
+}
+public protocol KingfisherCompatible : AnyObject {
+}
+public protocol KingfisherCompatibleValue {
+}
+extension IMChat.KingfisherCompatible {
+  public var kf: IMChat.KingfisherWrapper<Self> {
+    get
+    set
+  }
+}
+extension IMChat.KingfisherCompatibleValue {
+  public var kf: IMChat.KingfisherWrapper<Self> {
+    get
+    set
+  }
+}
+extension UIKit.UIImage : IMChat.KingfisherCompatible {
+}
+extension UIKit.UIImageView : IMChat.KingfisherCompatible {
+}
+extension UIKit.UIButton : IMChat.KingfisherCompatible {
+}
+extension UIKit.NSTextAttachment : IMChat.KingfisherCompatible {
+}
+public protocol ImageDownloaderDelegate : AnyObject {
+  func imageDownloader(_ downloader: IMChat.ImageDownloader, willDownloadImageForURL url: Foundation.URL, with request: Foundation.URLRequest?)
+  func imageDownloader(_ downloader: IMChat.ImageDownloader, didFinishDownloadingImageForURL url: Foundation.URL, with response: Foundation.URLResponse?, error: Swift.Error?)
+  func imageDownloader(_ downloader: IMChat.ImageDownloader, didDownload data: Foundation.Data, for url: Foundation.URL) -> Foundation.Data?
+  func imageDownloader(_ downloader: IMChat.ImageDownloader, didDownload image: IMChat.KFCrossPlatformImage, for url: Foundation.URL, with response: Foundation.URLResponse?)
+  func isValidStatusCode(_ code: Swift.Int, for downloader: IMChat.ImageDownloader) -> Swift.Bool
+}
+extension IMChat.ImageDownloaderDelegate {
+  public func imageDownloader(_ downloader: IMChat.ImageDownloader, willDownloadImageForURL url: Foundation.URL, with request: Foundation.URLRequest?)
+  public func imageDownloader(_ downloader: IMChat.ImageDownloader, didFinishDownloadingImageForURL url: Foundation.URL, with response: Foundation.URLResponse?, error: Swift.Error?)
+  public func imageDownloader(_ downloader: IMChat.ImageDownloader, didDownload image: IMChat.KFCrossPlatformImage, for url: Foundation.URL, with response: Foundation.URLResponse?)
+  public func isValidStatusCode(_ code: Swift.Int, for downloader: IMChat.ImageDownloader) -> Swift.Bool
+  public func imageDownloader(_ downloader: IMChat.ImageDownloader, didDownload data: Foundation.Data, for url: Foundation.URL) -> Foundation.Data?
+}
+public enum ImageTransition {
+  case none
+  case fade(Foundation.TimeInterval)
+  case flipFromLeft(Foundation.TimeInterval)
+  case flipFromRight(Foundation.TimeInterval)
+  case flipFromTop(Foundation.TimeInterval)
+  case flipFromBottom(Foundation.TimeInterval)
+  case custom(duration: Foundation.TimeInterval, options: UIKit.UIView.AnimationOptions, animations: ((UIKit.UIImageView, UIKit.UIImage) -> Swift.Void)?, completion: ((Swift.Bool) -> Swift.Void)?)
+}
+public struct ImageCreatingOptions {
+  public let scale: CoreGraphics.CGFloat
+  public let duration: Foundation.TimeInterval
+  public let preloadAll: Swift.Bool
+  public let onlyFirstFrame: Swift.Bool
+  public init(scale: CoreGraphics.CGFloat = 1.0, duration: Foundation.TimeInterval = 0.0, preloadAll: Swift.Bool = false, onlyFirstFrame: Swift.Bool = false)
+}
+extension UIKit.UICollectionView {
+  @_Concurrency.MainActor(unsafe) public func IMscrollToBottom(animated: Swift.Bool = true)
+}
+public protocol AnimatedImageViewDelegate : AnyObject {
+  func animatedImageView(_ imageView: IMChat.AnimatedImageView, didPlayAnimationLoops count: Swift.UInt)
+  func animatedImageViewDidFinishAnimating(_ imageView: IMChat.AnimatedImageView)
+}
+extension IMChat.AnimatedImageViewDelegate {
+  public func animatedImageView(_ imageView: IMChat.AnimatedImageView, didPlayAnimationLoops count: Swift.UInt)
+  public func animatedImageViewDidFinishAnimating(_ imageView: IMChat.AnimatedImageView)
+}
+@objc @_inheritsConvenienceInitializers @_Concurrency.MainActor(unsafe) open class AnimatedImageView : UIKit.UIImageView {
+  public enum RepeatCount : Swift.Equatable {
+    case once
+    case finite(count: Swift.UInt)
+    case infinite
+    public static func == (lhs: IMChat.AnimatedImageView.RepeatCount, rhs: IMChat.AnimatedImageView.RepeatCount) -> Swift.Bool
+  }
+  @_Concurrency.MainActor(unsafe) public var autoPlayAnimatedImage: Swift.Bool
+  @_Concurrency.MainActor(unsafe) public var framePreloadCount: Swift.Int
+  @_Concurrency.MainActor(unsafe) public var needsPrescaling: Swift.Bool
+  @_Concurrency.MainActor(unsafe) public var backgroundDecode: Swift.Bool
+  @_Concurrency.MainActor(unsafe) public var runLoopMode: Foundation.RunLoop.Mode {
+    get
+    set
+  }
+  @_Concurrency.MainActor(unsafe) public var repeatCount: IMChat.AnimatedImageView.RepeatCount {
+    get
+    set
+  }
+  @_Concurrency.MainActor(unsafe) weak public var delegate: IMChat.AnimatedImageViewDelegate?
+  @_Concurrency.MainActor(unsafe) public var animator: IMChat.AnimatedImageView.Animator? {
+    get
+  }
+  @_Concurrency.MainActor(unsafe) @objc override dynamic open var image: IMChat.KFCrossPlatformImage? {
+    @_Concurrency.MainActor(unsafe) @objc get
+    @_Concurrency.MainActor(unsafe) @objc set
+  }
+  @objc deinit
+  @_Concurrency.MainActor(unsafe) @objc override dynamic open var isAnimating: Swift.Bool {
+    @_Concurrency.MainActor(unsafe) @objc get
+  }
+  @_Concurrency.MainActor(unsafe) @objc override dynamic open func startAnimating()
+  @_Concurrency.MainActor(unsafe) @objc override dynamic open func stopAnimating()
+  @_Concurrency.MainActor(unsafe) @objc override dynamic open func display(_ layer: QuartzCore.CALayer)
+  @_Concurrency.MainActor(unsafe) @objc override dynamic open func didMoveToWindow()
+  @_Concurrency.MainActor(unsafe) @objc override dynamic open func didMoveToSuperview()
+  @_Concurrency.MainActor(unsafe) @objc override dynamic public init(image: UIKit.UIImage?)
+  @available(iOS 3.0, *)
+  @_Concurrency.MainActor(unsafe) @objc override dynamic public init(image: UIKit.UIImage?, highlightedImage: UIKit.UIImage?)
+  @_Concurrency.MainActor(unsafe) @objc override dynamic public init(frame: CoreGraphics.CGRect)
+  @_Concurrency.MainActor(unsafe) @objc required dynamic public init?(coder: Foundation.NSCoder)
+}
+extension IMChat.AnimatedImageView {
+  @_hasMissingDesignatedInitializers public class Animator {
+    final public let maxFrameCount: Swift.Int
+    public var currentFrameImage: UIKit.UIImage? {
+      get
+    }
+    public var currentFrameDuration: Foundation.TimeInterval {
+      get
+    }
+    public var currentFrameIndex: Swift.Int {
+      get
+    }
+    public var isLastFrame: Swift.Bool {
+      get
+    }
+    public func frame(at index: Swift.Int) -> IMChat.KFCrossPlatformImage?
+    public func duration(at index: Swift.Int) -> Foundation.TimeInterval
+    @objc deinit
+  }
+}
+public struct ImageProgressive {
+  public static let `default`: IMChat.ImageProgressive
+  public init(isBlur: Swift.Bool, isFastestScan: Swift.Bool, scanInterval: Foundation.TimeInterval)
+}
+public typealias Transformer = (CoreImage.CIImage) -> CoreImage.CIImage?
+public protocol CIImageProcessor : IMChat.ImageProcessor {
+  var filter: IMChat.Filter { get }
+}
+extension IMChat.CIImageProcessor {
+  public func process(item: IMChat.ImageProcessItem, options: IMChat.KingfisherParsedOptionsInfo) -> IMChat.KFCrossPlatformImage?
+}
+public struct Filter {
+  public init(transform: @escaping IMChat.Transformer)
+  public static var tint: (_ color: IMChat.KFCrossPlatformColor) -> IMChat.Filter
+  public typealias ColorElement = (CoreGraphics.CGFloat, CoreGraphics.CGFloat, CoreGraphics.CGFloat, CoreGraphics.CGFloat)
+  public static var colorControl: (_ arg: IMChat.Filter.ColorElement) -> IMChat.Filter
+}
+extension IMChat.KingfisherWrapper where Base : UIKit.UIImage {
+  public func apply(_ filter: IMChat.Filter) -> IMChat.KFCrossPlatformImage
+}
+extension IMChat.KingfisherWrapper where Base : UIKit.UIButton {
+  @discardableResult
+  public func setImage(with source: IMChat.Source?, for state: UIKit.UIControl.State, placeholder: UIKit.UIImage? = nil, options: IMChat.KingfisherOptionsInfo? = nil, progressBlock: IMChat.DownloadProgressBlock? = nil, completionHandler: ((Swift.Result<IMChat.RetrieveImageResult, IMChat.KingfisherError>) -> Swift.Void)? = nil) -> IMChat.DownloadTask?
+  @discardableResult
+  public func setImage(with resource: IMChat.Resource?, for state: UIKit.UIControl.State, placeholder: UIKit.UIImage? = nil, options: IMChat.KingfisherOptionsInfo? = nil, progressBlock: IMChat.DownloadProgressBlock? = nil, completionHandler: ((Swift.Result<IMChat.RetrieveImageResult, IMChat.KingfisherError>) -> Swift.Void)? = nil) -> IMChat.DownloadTask?
+  @discardableResult
+  public func setImage(with source: IMChat.Source?, for state: UIKit.UIControl.State, placeholder: UIKit.UIImage? = nil, parsedOptions: IMChat.KingfisherParsedOptionsInfo, progressBlock: IMChat.DownloadProgressBlock? = nil, completionHandler: ((Swift.Result<IMChat.RetrieveImageResult, IMChat.KingfisherError>) -> Swift.Void)? = nil) -> IMChat.DownloadTask?
+  public func cancelImageDownloadTask()
+  @discardableResult
+  public func setBackgroundImage(with source: IMChat.Source?, for state: UIKit.UIControl.State, placeholder: UIKit.UIImage? = nil, options: IMChat.KingfisherOptionsInfo? = nil, progressBlock: IMChat.DownloadProgressBlock? = nil, completionHandler: ((Swift.Result<IMChat.RetrieveImageResult, IMChat.KingfisherError>) -> Swift.Void)? = nil) -> IMChat.DownloadTask?
+  @discardableResult
+  public func setBackgroundImage(with resource: IMChat.Resource?, for state: UIKit.UIControl.State, placeholder: UIKit.UIImage? = nil, options: IMChat.KingfisherOptionsInfo? = nil, progressBlock: IMChat.DownloadProgressBlock? = nil, completionHandler: ((Swift.Result<IMChat.RetrieveImageResult, IMChat.KingfisherError>) -> Swift.Void)? = nil) -> IMChat.DownloadTask?
+  public func cancelBackgroundImageDownloadTask()
+}
+extension IMChat.KingfisherWrapper where Base : UIKit.UIButton {
+  public func taskIdentifier(for state: UIKit.UIControl.State) -> IMChat.Source.Identifier.Value?
+}
+extension IMChat.KingfisherWrapper where Base : UIKit.UIButton {
+  public func backgroundTaskIdentifier(for state: UIKit.UIControl.State) -> IMChat.Source.Identifier.Value?
+}
+public struct AVAssetImageDataProvider : IMChat.ImageDataProvider {
+  public enum AVAssetImageDataProviderError : Swift.Error {
+    case userCancelled
+    case invalidImage(_: CoreGraphics.CGImage?)
+  }
+  public let assetImageGenerator: AVFoundation.AVAssetImageGenerator
+  public let time: CoreMedia.CMTime
+  public var cacheKey: Swift.String {
+    get
+  }
+  public init(assetImageGenerator: AVFoundation.AVAssetImageGenerator, time: CoreMedia.CMTime)
+  public init(assetURL: Foundation.URL, time: CoreMedia.CMTime)
+  public init(assetURL: Foundation.URL, seconds: Foundation.TimeInterval)
+  public func data(handler: @escaping (Swift.Result<Foundation.Data, Swift.Error>) -> Swift.Void)
+}
+public enum KingfisherError : Swift.Error {
+  public enum RequestErrorReason {
+    case emptyRequest
+    case invalidURL(request: Foundation.URLRequest)
+    case taskCancelled(task: IMChat.SessionDataTask, token: IMChat.SessionDataTask.CancelToken)
+  }
+  public enum ResponseErrorReason {
+    case invalidURLResponse(response: Foundation.URLResponse)
+    case invalidHTTPStatusCode(response: Foundation.HTTPURLResponse)
+    case URLSessionError(error: Swift.Error)
+    case dataModifyingFailed(task: IMChat.SessionDataTask)
+    case noURLResponse(task: IMChat.SessionDataTask)
+  }
+  public enum CacheErrorReason {
+    case fileEnumeratorCreationFailed(url: Foundation.URL)
+    case invalidFileEnumeratorContent(url: Foundation.URL)
+    case invalidURLResource(error: Swift.Error, key: Swift.String, url: Foundation.URL)
+    case cannotLoadDataFromDisk(url: Foundation.URL, error: Swift.Error)
+    case cannotCreateDirectory(path: Swift.String, error: Swift.Error)
+    case imageNotExisting(key: Swift.String)
+    case cannotConvertToData(object: Any, error: Swift.Error)
+    case cannotSerializeImage(image: IMChat.KFCrossPlatformImage?, original: Foundation.Data?, serializer: IMChat.CacheSerializer)
+    case cannotCreateCacheFile(fileURL: Foundation.URL, key: Swift.String, data: Foundation.Data, error: Swift.Error)
+    case cannotSetCacheFileAttribute(filePath: Swift.String, attributes: [Foundation.FileAttributeKey : Any], error: Swift.Error)
+    case diskStorageIsNotReady(cacheURL: Foundation.URL)
+  }
+  public enum ProcessorErrorReason {
+    case processingFailed(processor: IMChat.ImageProcessor, item: IMChat.ImageProcessItem)
+  }
+  public enum ImageSettingErrorReason {
+    case emptySource
+    case notCurrentSourceTask(result: IMChat.RetrieveImageResult?, error: Swift.Error?, source: IMChat.Source)
+    case dataProviderError(provider: IMChat.ImageDataProvider, error: Swift.Error)
+    case alternativeSourcesExhausted([IMChat.PropagationError])
+  }
+  case requestError(reason: IMChat.KingfisherError.RequestErrorReason)
+  case responseError(reason: IMChat.KingfisherError.ResponseErrorReason)
+  case cacheError(reason: IMChat.KingfisherError.CacheErrorReason)
+  case processorError(reason: IMChat.KingfisherError.ProcessorErrorReason)
+  case imageSettingError(reason: IMChat.KingfisherError.ImageSettingErrorReason)
+  public var isTaskCancelled: Swift.Bool {
+    get
+  }
+  public func isInvalidResponseStatusCode(_ code: Swift.Int) -> Swift.Bool
+  public var isInvalidResponseStatusCode: Swift.Bool {
+    get
+  }
+  public var isNotCurrentTask: Swift.Bool {
+    get
+  }
+}
+extension IMChat.KingfisherError : Foundation.LocalizedError {
+  public var errorDescription: Swift.String? {
+    get
+  }
+}
+extension IMChat.KingfisherError : Foundation.CustomNSError {
+  public static let domain: Swift.String
+  public var errorCode: Swift.Int {
+    get
+  }
+}
+public protocol AuthenticationChallengeResponsable : AnyObject {
+  func downloader(_ downloader: IMChat.ImageDownloader, didReceive challenge: Foundation.URLAuthenticationChallenge, completionHandler: @escaping (Foundation.URLSession.AuthChallengeDisposition, Foundation.URLCredential?) -> Swift.Void)
+  func downloader(_ downloader: IMChat.ImageDownloader, task: Foundation.URLSessionTask, didReceive challenge: Foundation.URLAuthenticationChallenge, completionHandler: @escaping (Foundation.URLSession.AuthChallengeDisposition, Foundation.URLCredential?) -> Swift.Void)
+}
+extension IMChat.AuthenticationChallengeResponsable {
+  public func downloader(_ downloader: IMChat.ImageDownloader, didReceive challenge: Foundation.URLAuthenticationChallenge, completionHandler: @escaping (Foundation.URLSession.AuthChallengeDisposition, Foundation.URLCredential?) -> Swift.Void)
+  public func downloader(_ downloader: IMChat.ImageDownloader, task: Foundation.URLSessionTask, didReceive challenge: Foundation.URLAuthenticationChallenge, completionHandler: @escaping (Foundation.URLSession.AuthChallengeDisposition, Foundation.URLCredential?) -> Swift.Void)
+}
+public var IM: IMChat.IMChatShared {
+  get
+}
+@_hasMissingDesignatedInitializers public class IMChatShared {
+  public struct Static {
+  }
+  public class var instance: IMChat.IMChatShared {
+    get
+  }
+  public var setting: IMChat.IMChatShared.Setting
+  @objc deinit
+}
+extension IMChat.IMChatShared {
+  @_hasMissingDesignatedInitializers public class Setting {
+    public var language: Swift.String
+    public var textColor: UIKit.UIColor
+    public var rightBackgroundColor: UIKit.UIColor
+    public var secondColor: UIKit.UIColor
+    public var leftBackgroundColor: UIKit.UIColor
+    public var leftTextColor: UIKit.UIColor
+    public var rightTextColor: UIKit.UIColor
+    public var leftBorderColor: UIKit.UIColor
+    public var rightBorderColor: UIKit.UIColor
+    public var dateTextColor: UIKit.UIColor
+    public var visibleDate: Swift.Bool
+    public var visibleUserImage: Swift.Bool
+    public var GOOGLE_API_KEY: Swift.String
+    @objc deinit
+  }
+  public struct ChatCollectionViewConfig {
+  }
+}
+public typealias IndicatorView = UIKit.UIView
+public enum IndicatorType {
+  case none
+  case activity
+  case image(imageData: Foundation.Data)
+  case custom(indicator: IMChat.Indicator)
+}
+public protocol Indicator {
+  func startAnimatingView()
+  func stopAnimatingView()
+  var centerOffset: CoreGraphics.CGPoint { get }
+  var view: IMChat.IndicatorView { get }
+  func sizeStrategy(in imageView: IMChat.KFCrossPlatformImageView) -> IMChat.IndicatorSizeStrategy
+}
+public enum IndicatorSizeStrategy {
+  case intrinsicSize
+  case full
+  case size(CoreGraphics.CGSize)
+}
+extension IMChat.Indicator {
+  public var centerOffset: CoreGraphics.CGPoint {
+    get
+  }
+  public func sizeStrategy(in imageView: IMChat.KFCrossPlatformImageView) -> IMChat.IndicatorSizeStrategy
+}
+extension IMChat.KingfisherWrapper where Base : UIKit.UIImage {
+  public func image(withBlendMode blendMode: CoreGraphics.CGBlendMode, alpha: CoreGraphics.CGFloat = 1.0, backgroundColor: IMChat.KFCrossPlatformColor? = nil) -> IMChat.KFCrossPlatformImage
+  public func image(withRoundRadius radius: CoreGraphics.CGFloat, fit size: CoreGraphics.CGSize, roundingCorners corners: IMChat.RectCorner = .all, backgroundColor: IMChat.KFCrossPlatformColor? = nil) -> IMChat.KFCrossPlatformImage
+  public func resize(to size: CoreGraphics.CGSize) -> IMChat.KFCrossPlatformImage
+  public func resize(to targetSize: CoreGraphics.CGSize, for contentMode: IMChat.ContentMode) -> IMChat.KFCrossPlatformImage
+  public func crop(to size: CoreGraphics.CGSize, anchorOn anchor: CoreGraphics.CGPoint) -> IMChat.KFCrossPlatformImage
+  public func blurred(withRadius radius: CoreGraphics.CGFloat) -> IMChat.KFCrossPlatformImage
+  public func overlaying(with color: IMChat.KFCrossPlatformColor, fraction: CoreGraphics.CGFloat) -> IMChat.KFCrossPlatformImage
+  public func tinted(with color: IMChat.KFCrossPlatformColor) -> IMChat.KFCrossPlatformImage
+  public func adjusted(brightness: CoreGraphics.CGFloat, contrast: CoreGraphics.CGFloat, saturation: CoreGraphics.CGFloat, inputEV: CoreGraphics.CGFloat) -> IMChat.KFCrossPlatformImage
+  public func scaled(to scale: CoreGraphics.CGFloat) -> IMChat.KFCrossPlatformImage
+}
+extension IMChat.KingfisherWrapper where Base : UIKit.UIImage {
+  public var decoded: IMChat.KFCrossPlatformImage {
+    get
+  }
+  public func decoded(scale: CoreGraphics.CGFloat) -> IMChat.KFCrossPlatformImage
+}
+public enum Source {
+  public enum Identifier {
+    public typealias Value = Swift.UInt
+  }
+  case network(IMChat.Resource)
+  case provider(IMChat.ImageDataProvider)
+  public var cacheKey: Swift.String {
+    get
+  }
+  public var url: Foundation.URL? {
+    get
+  }
+}
+extension IMChat.Source : Swift.Hashable {
+  public static func == (lhs: IMChat.Source, rhs: IMChat.Source) -> Swift.Bool
+  public func hash(into hasher: inout Swift.Hasher)
+  public var hashValue: Swift.Int {
+    get
+  }
+}
+extension IMChat.KingfisherWrapper where Base : UIKit.UIImage {
+  public var normalized: IMChat.KFCrossPlatformImage {
+    get
+  }
+}
+extension IMChat.KingfisherWrapper where Base : UIKit.UIImage {
+  public func pngRepresentation() -> Foundation.Data?
+  public func jpegRepresentation(compressionQuality: CoreGraphics.CGFloat) -> Foundation.Data?
+  public func gifRepresentation() -> Foundation.Data?
+  public func data(format: IMChat.ImageFormat, compressionQuality: CoreGraphics.CGFloat = 1.0) -> Foundation.Data?
+}
+extension IMChat.KingfisherWrapper where Base : UIKit.UIImage {
+  public static func animatedImage(data: Foundation.Data, options: IMChat.ImageCreatingOptions) -> IMChat.KFCrossPlatformImage?
+  public static func image(data: Foundation.Data, options: IMChat.ImageCreatingOptions) -> IMChat.KFCrossPlatformImage?
+  public static func downsampledImage(data: Foundation.Data, to pointSize: CoreGraphics.CGSize, scale: CoreGraphics.CGFloat) -> IMChat.KFCrossPlatformImage?
+}
+public typealias KingfisherOptionsInfo = [IMChat.KingfisherOptionsInfoItem]
+public enum KingfisherOptionsInfoItem {
+  case targetCache(IMChat.ImageCache)
+  case originalCache(IMChat.ImageCache)
+  case downloader(IMChat.ImageDownloader)
+  case transition(IMChat.ImageTransition)
+  case downloadPriority(Swift.Float)
+  case forceRefresh
+  case fromMemoryCacheOrRefresh
+  case forceTransition
+  case cacheMemoryOnly
+  case waitForCache
+  case onlyFromCache
+  case backgroundDecode
+  case callbackQueue(IMChat.CallbackQueue)
+  case scaleFactor(CoreGraphics.CGFloat)
+  case preloadAllAnimationData
+  case requestModifier(IMChat.AsyncImageDownloadRequestModifier)
+  case redirectHandler(IMChat.ImageDownloadRedirectHandler)
+  case processor(IMChat.ImageProcessor)
+  case cacheSerializer(IMChat.CacheSerializer)
+  case imageModifier(IMChat.ImageModifier)
+  case keepCurrentImageWhileLoading
+  case onlyLoadFirstFrame
+  case cacheOriginalImage
+  case onFailureImage(IMChat.KFCrossPlatformImage?)
+  case alsoPrefetchToMemory
+  case loadDiskFileSynchronously
+  case memoryCacheExpiration(IMChat.StorageExpiration)
+  case memoryCacheAccessExtendingExpiration(IMChat.ExpirationExtending)
+  case diskCacheExpiration(IMChat.StorageExpiration)
+  case diskCacheAccessExtendingExpiration(IMChat.ExpirationExtending)
+  case processingQueue(IMChat.CallbackQueue)
+  case progressiveJPEG(IMChat.ImageProgressive)
+  case alternativeSources([IMChat.Source])
+  case retryStrategy(IMChat.RetryStrategy)
+  case lowDataMode(IMChat.Source?)
+}
+public struct KingfisherParsedOptionsInfo {
+  public var targetCache: IMChat.ImageCache?
+  public var originalCache: IMChat.ImageCache?
+  public var downloader: IMChat.ImageDownloader?
+  public var transition: IMChat.ImageTransition
+  public var downloadPriority: Swift.Float
+  public var forceRefresh: Swift.Bool
+  public var fromMemoryCacheOrRefresh: Swift.Bool
+  public var forceTransition: Swift.Bool
+  public var cacheMemoryOnly: Swift.Bool
+  public var waitForCache: Swift.Bool
+  public var onlyFromCache: Swift.Bool
+  public var backgroundDecode: Swift.Bool
+  public var preloadAllAnimationData: Swift.Bool
+  public var callbackQueue: IMChat.CallbackQueue
+  public var scaleFactor: CoreGraphics.CGFloat
+  public var requestModifier: IMChat.AsyncImageDownloadRequestModifier?
+  public var redirectHandler: IMChat.ImageDownloadRedirectHandler?
+  public var processor: IMChat.ImageProcessor
+  public var imageModifier: IMChat.ImageModifier?
+  public var cacheSerializer: IMChat.CacheSerializer
+  public var keepCurrentImageWhileLoading: Swift.Bool
+  public var onlyLoadFirstFrame: Swift.Bool
+  public var cacheOriginalImage: Swift.Bool
+  public var onFailureImage: IMChat.KFCrossPlatformImage??
+  public var alsoPrefetchToMemory: Swift.Bool
+  public var loadDiskFileSynchronously: Swift.Bool
+  public var memoryCacheExpiration: IMChat.StorageExpiration?
+  public var memoryCacheAccessExtendingExpiration: IMChat.ExpirationExtending
+  public var diskCacheExpiration: IMChat.StorageExpiration?
+  public var diskCacheAccessExtendingExpiration: IMChat.ExpirationExtending
+  public var processingQueue: IMChat.CallbackQueue?
+  public var progressiveJPEG: IMChat.ImageProgressive?
+  public var alternativeSources: [IMChat.Source]?
+  public var retryStrategy: IMChat.RetryStrategy?
+  public var lowDataModeSource: IMChat.Source?
+  public init(_ info: IMChat.KingfisherOptionsInfo?)
+}
+public enum ImageFormat {
+  case unknown
+  case PNG
+  case JPEG
+  case GIF
+  public enum JPEGMarker {
+    case SOF0
+    case SOF2
+    case DHT
+    case DQT
+    case DRI
+    case SOS
+    case RSTn(Swift.UInt8)
+    case APPn
+    case COM
+    case EOI
+  }
+  public static func == (a: IMChat.ImageFormat, b: IMChat.ImageFormat) -> Swift.Bool
+  public func hash(into hasher: inout Swift.Hasher)
+  public var hashValue: Swift.Int {
+    get
+  }
+}
+extension Foundation.Data : IMChat.KingfisherCompatibleValue {
+}
+extension IMChat.KingfisherWrapper where Base == Foundation.Data {
+  public var imageFormat: IMChat.ImageFormat {
+    get
+  }
+  public func contains(jpeg marker: IMChat.ImageFormat.JPEGMarker) -> Swift.Bool
+}
+public typealias PrefetcherProgressBlock = ((_ skippedResources: [IMChat.Resource], _ failedResources: [IMChat.Resource], _ completedResources: [IMChat.Resource]) -> Swift.Void)
+public typealias PrefetcherSourceProgressBlock = ((_ skippedSources: [IMChat.Source], _ failedSources: [IMChat.Source], _ completedSources: [IMChat.Source]) -> Swift.Void)
+public typealias PrefetcherCompletionHandler = ((_ skippedResources: [IMChat.Resource], _ failedResources: [IMChat.Resource], _ completedResources: [IMChat.Resource]) -> Swift.Void)
+public typealias PrefetcherSourceCompletionHandler = ((_ skippedSources: [IMChat.Source], _ failedSources: [IMChat.Source], _ completedSources: [IMChat.Source]) -> Swift.Void)
+@_hasMissingDesignatedInitializers public class ImagePrefetcher : Swift.CustomStringConvertible {
+  public var description: Swift.String {
+    get
+  }
+  public var maxConcurrentDownloads: Swift.Int
+  convenience public init(urls: [Foundation.URL], options: IMChat.KingfisherOptionsInfo? = nil, progressBlock: IMChat.PrefetcherProgressBlock? = nil, completionHandler: IMChat.PrefetcherCompletionHandler? = nil)
+  convenience public init(urls: [Foundation.URL], options: IMChat.KingfisherOptionsInfo? = nil, completionHandler: IMChat.PrefetcherCompletionHandler? = nil)
+  convenience public init(resources: [IMChat.Resource], options: IMChat.KingfisherOptionsInfo? = nil, progressBlock: IMChat.PrefetcherProgressBlock? = nil, completionHandler: IMChat.PrefetcherCompletionHandler? = nil)
+  convenience public init(resources: [IMChat.Resource], options: IMChat.KingfisherOptionsInfo? = nil, completionHandler: IMChat.PrefetcherCompletionHandler? = nil)
+  convenience public init(sources: [IMChat.Source], options: IMChat.KingfisherOptionsInfo? = nil, progressBlock: IMChat.PrefetcherSourceProgressBlock? = nil, completionHandler: IMChat.PrefetcherSourceCompletionHandler? = nil)
+  convenience public init(sources: [IMChat.Source], options: IMChat.KingfisherOptionsInfo? = nil, completionHandler: IMChat.PrefetcherSourceCompletionHandler? = nil)
+  public func start()
+  public func stop()
+  @objc deinit
+}
+public protocol CacheSerializer {
+  func data(with image: IMChat.KFCrossPlatformImage, original: Foundation.Data?) -> Foundation.Data?
+  func image(with data: Foundation.Data, options: IMChat.KingfisherParsedOptionsInfo) -> IMChat.KFCrossPlatformImage?
+}
+public struct DefaultCacheSerializer : IMChat.CacheSerializer {
+  public static let `default`: IMChat.DefaultCacheSerializer
+  public var compressionQuality: CoreGraphics.CGFloat
+  public var preferCacheOriginalData: Swift.Bool
+  public init()
+  public func data(with image: IMChat.KFCrossPlatformImage, original: Foundation.Data?) -> Foundation.Data?
+  public func image(with data: Foundation.Data, options: IMChat.KingfisherParsedOptionsInfo) -> IMChat.KFCrossPlatformImage?
+}
+extension IMChat.ChatCollectionViewDelegate {
+  public func collectionView(_ collectionView: UIKit.UICollectionView, didSelectItemAt indexPath: Foundation.IndexPath)
+  public func collectionView(_ scrollView: UIKit.UIScrollView, reloadTheTop decelerate: Swift.Bool)
+}
+@_hasMissingDesignatedInitializers public class RetryContext {
+  final public let source: IMChat.Source
+  final public let error: IMChat.KingfisherError
+  public var retriedCount: Swift.Int
+  public var userInfo: Any? {
+    get
+  }
+  @objc deinit
+}
+public enum RetryDecision {
+  case retry(userInfo: Any?)
+  case stop
+}
+public protocol RetryStrategy {
+  func retry(context: IMChat.RetryContext, retryHandler: @escaping (IMChat.RetryDecision) -> Swift.Void)
+}
+public struct DelayRetryStrategy : IMChat.RetryStrategy {
+  public enum Interval {
+    case seconds(Foundation.TimeInterval)
+    case accumulated(Foundation.TimeInterval)
+    case custom(block: (_ retriedCount: Swift.Int) -> Foundation.TimeInterval)
+  }
+  public let maxRetryCount: Swift.Int
+  public let retryInterval: IMChat.DelayRetryStrategy.Interval
+  public init(maxRetryCount: Swift.Int, retryInterval: IMChat.DelayRetryStrategy.Interval = .seconds(3))
+  public func retry(context: IMChat.RetryContext, retryHandler: @escaping (IMChat.RetryDecision) -> Swift.Void)
+}
+public enum KF {
+  public static func source(_ source: IMChat.Source?) -> IMChat.KF.Builder
+  public static func resource(_ resource: IMChat.Resource?) -> IMChat.KF.Builder
+  public static func url(_ url: Foundation.URL?, cacheKey: Swift.String? = nil) -> IMChat.KF.Builder
+  public static func dataProvider(_ provider: IMChat.ImageDataProvider?) -> IMChat.KF.Builder
+  public static func data(_ data: Foundation.Data?, cacheKey: Swift.String) -> IMChat.KF.Builder
+}
+extension IMChat.KF {
+  @_hasMissingDesignatedInitializers public class Builder {
+    public var options: IMChat.KingfisherParsedOptionsInfo
+    final public let onFailureDelegate: IMChat.Delegate<IMChat.KingfisherError, Swift.Void>
+    final public let onSuccessDelegate: IMChat.Delegate<IMChat.RetrieveImageResult, Swift.Void>
+    final public let onProgressDelegate: IMChat.Delegate<(Swift.Int64, Swift.Int64), Swift.Void>
+    @objc deinit
+  }
+}
+extension IMChat.KF.Builder {
+  @discardableResult
+  public func set(to imageView: IMChat.KFCrossPlatformImageView) -> IMChat.DownloadTask?
+  @discardableResult
+  public func set(to attachment: UIKit.NSTextAttachment, attributedView: IMChat.KFCrossPlatformView) -> IMChat.DownloadTask?
+  @discardableResult
+  public func set(to button: UIKit.UIButton, for state: UIKit.UIControl.State) -> IMChat.DownloadTask?
+  @discardableResult
+  public func setBackground(to button: UIKit.UIButton, for state: UIKit.UIControl.State) -> IMChat.DownloadTask?
+}
+extension IMChat.KF.Builder {
+  public func placeholder(_ placeholder: IMChat.Placeholder?) -> Self
+  public func placeholder(_ image: IMChat.KFCrossPlatformImage?) -> Self
+}
+extension IMChat.KF.Builder {
+  public func transition(_ transition: IMChat.ImageTransition) -> Self
+  public func fade(duration: Foundation.TimeInterval) -> Self
+  public func keepCurrentImageWhileLoading(_ enabled: Swift.Bool = true) -> Self
+  public func onlyLoadFirstFrame(_ enabled: Swift.Bool = true) -> Self
+  public func onFailureImage(_ image: IMChat.KFCrossPlatformImage?) -> Self
+  public func progressiveJPEG(_ progressive: IMChat.ImageProgressive? = .default) -> Self
+}
+extension IMChat.KF {
+  public struct RedirectPayload {
+    public let task: IMChat.SessionDataTask
+    public let response: Foundation.HTTPURLResponse
+    public let newRequest: Foundation.URLRequest
+    public let completionHandler: (Foundation.URLRequest?) -> Swift.Void
+  }
+}
+public protocol KFOptionSetter {
+  var options: IMChat.KingfisherParsedOptionsInfo { get nonmutating set }
+  var onFailureDelegate: IMChat.Delegate<IMChat.KingfisherError, Swift.Void> { get }
+  var onSuccessDelegate: IMChat.Delegate<IMChat.RetrieveImageResult, Swift.Void> { get }
+  var onProgressDelegate: IMChat.Delegate<(Swift.Int64, Swift.Int64), Swift.Void> { get }
+  var delegateObserver: Swift.AnyObject { get }
+}
+extension IMChat.KF.Builder : IMChat.KFOptionSetter {
+  public var delegateObserver: Swift.AnyObject {
+    get
+  }
+}
+@available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *)
+extension IMChat.KFImage : IMChat.KFOptionSetter {
+  public var options: IMChat.KingfisherParsedOptionsInfo {
+    get
+    nonmutating set
+  }
+  public var onFailureDelegate: IMChat.Delegate<IMChat.KingfisherError, Swift.Void> {
+    get
+  }
+  public var onSuccessDelegate: IMChat.Delegate<IMChat.RetrieveImageResult, Swift.Void> {
+    get
+  }
+  public var onProgressDelegate: IMChat.Delegate<(Swift.Int64, Swift.Int64), Swift.Void> {
+    get
+  }
+  public var delegateObserver: Swift.AnyObject {
+    get
+  }
+}
+extension IMChat.KFOptionSetter {
+  public func onProgress(_ block: IMChat.DownloadProgressBlock?) -> Self
+  public func onSuccess(_ block: ((IMChat.RetrieveImageResult) -> Swift.Void)?) -> Self
+  public func onFailure(_ block: ((IMChat.KingfisherError) -> Swift.Void)?) -> Self
+}
+extension IMChat.KFOptionSetter {
+  public func targetCache(_ cache: IMChat.ImageCache) -> Self
+  public func originalCache(_ cache: IMChat.ImageCache) -> Self
+  public func downloader(_ downloader: IMChat.ImageDownloader) -> Self
+  public func downloadPriority(_ priority: Swift.Float) -> Self
+  public func forceRefresh(_ enabled: Swift.Bool = true) -> Self
+  public func fromMemoryCacheOrRefresh(_ enabled: Swift.Bool = true) -> Self
+  public func cacheMemoryOnly(_ enabled: Swift.Bool = true) -> Self
+  public func waitForCache(_ enabled: Swift.Bool = true) -> Self
+  public func onlyFromCache(_ enabled: Swift.Bool = true) -> Self
+  public func backgroundDecode(_ enabled: Swift.Bool = true) -> Self
+  public func callbackQueue(_ queue: IMChat.CallbackQueue) -> Self
+  public func scaleFactor(_ factor: CoreGraphics.CGFloat) -> Self
+  public func cacheOriginalImage(_ enabled: Swift.Bool = true) -> Self
+  public func loadDiskFileSynchronously(_ enabled: Swift.Bool = true) -> Self
+  public func processingQueue(_ queue: IMChat.CallbackQueue?) -> Self
+  public func alternativeSources(_ sources: [IMChat.Source]?) -> Self
+  public func retry(_ strategy: IMChat.RetryStrategy) -> Self
+  public func retry(maxCount: Swift.Int, interval: IMChat.DelayRetryStrategy.Interval = .seconds(3)) -> Self
+  public func lowDataModeSource(_ source: IMChat.Source?) -> Self
+  public func forceTransition(_ enabled: Swift.Bool = true) -> Self
+}
+extension IMChat.KFOptionSetter {
+  public func requestModifier(_ modifier: IMChat.ImageDownloadRequestModifier) -> Self
+  public func requestModifier(_ modifyBlock: @escaping (inout Foundation.URLRequest) -> Swift.Void) -> Self
+}
+extension IMChat.KFOptionSetter {
+  public func redirectHandler(_ handler: IMChat.ImageDownloadRedirectHandler) -> Self
+  public func redirectHandler(_ block: @escaping (IMChat.KF.RedirectPayload) -> Swift.Void) -> Self
+}
+extension IMChat.KFOptionSetter {
+  public func setProcessor(_ processor: IMChat.ImageProcessor) -> Self
+  public func setProcessors(_ processors: [IMChat.ImageProcessor]) -> Self
+  public func appendProcessor(_ processor: IMChat.ImageProcessor) -> Self
+  public func roundCorner(radius: IMChat.RoundCornerImageProcessor.Radius, targetSize: CoreGraphics.CGSize? = nil, roundingCorners corners: IMChat.RectCorner = .all, backgroundColor: IMChat.KFCrossPlatformColor? = nil) -> Self
+  public func blur(radius: CoreGraphics.CGFloat) -> Self
+  public func overlay(color: IMChat.KFCrossPlatformColor, fraction: CoreGraphics.CGFloat = 0.5) -> Self
+  public func tint(color: IMChat.KFCrossPlatformColor) -> Self
+  public func blackWhite() -> Self
+  public func cropping(size: CoreGraphics.CGSize, anchor: CoreGraphics.CGPoint = .init(x: 0.5, y: 0.5)) -> Self
+  public func downsampling(size: CoreGraphics.CGSize) -> Self
+  public func resizing(referenceSize: CoreGraphics.CGSize, mode: IMChat.ContentMode = .none) -> Self
+}
+extension IMChat.KFOptionSetter {
+  public func serialize(by cacheSerializer: IMChat.CacheSerializer) -> Self
+  public func serialize(as format: IMChat.ImageFormat, jpegCompressionQuality: CoreGraphics.CGFloat? = nil) -> Self
+}
+extension IMChat.KFOptionSetter {
+  public func imageModifier(_ modifier: IMChat.ImageModifier?) -> Self
+  public func imageModifier(_ block: @escaping (inout IMChat.KFCrossPlatformImage) throws -> Swift.Void) -> Self
+}
+extension IMChat.KFOptionSetter {
+  public func memoryCacheExpiration(_ expiration: IMChat.StorageExpiration?) -> Self
+  public func memoryCacheAccessExtending(_ extending: IMChat.ExpirationExtending) -> Self
+  public func diskCacheExpiration(_ expiration: IMChat.StorageExpiration?) -> Self
+  public func diskCacheAccessExtending(_ extending: IMChat.ExpirationExtending) -> Self
+}
+public protocol ImageModifier {
+  func modify(_ image: IMChat.KFCrossPlatformImage) -> IMChat.KFCrossPlatformImage
+}
+public struct AnyImageModifier : IMChat.ImageModifier {
+  public init(modify: @escaping (IMChat.KFCrossPlatformImage) throws -> IMChat.KFCrossPlatformImage)
+  public func modify(_ image: IMChat.KFCrossPlatformImage) -> IMChat.KFCrossPlatformImage
+}
+public struct RenderingModeImageModifier : IMChat.ImageModifier {
+  public let renderingMode: UIKit.UIImage.RenderingMode
+  public init(renderingMode: UIKit.UIImage.RenderingMode = .automatic)
+  public func modify(_ image: IMChat.KFCrossPlatformImage) -> IMChat.KFCrossPlatformImage
+}
+public struct FlipsForRightToLeftLayoutDirectionImageModifier : IMChat.ImageModifier {
+  public init()
+  public func modify(_ image: IMChat.KFCrossPlatformImage) -> IMChat.KFCrossPlatformImage
+}
+public struct AlignmentRectInsetsImageModifier : IMChat.ImageModifier {
+  public let alignmentInsets: UIKit.UIEdgeInsets
+  public init(alignmentInsets: UIKit.UIEdgeInsets)
+  public func modify(_ image: IMChat.KFCrossPlatformImage) -> IMChat.KFCrossPlatformImage
+}
+@objc @_inheritsConvenienceInitializers @IBDesignable @_Concurrency.MainActor(unsafe) public class UIChatCollectionView : UIKit.UICollectionView {
+  @_Concurrency.MainActor(unsafe) weak public var chatDataSource: IMChat.ChatCollectionViewDataSource? {
+    get
+    set
+  }
+  @_Concurrency.MainActor(unsafe) weak public var chatDelegate: IMChat.ChatCollectionViewDelegate? {
+    get
+    set
+  }
+  @_Concurrency.MainActor(unsafe) @objc override dynamic public init(frame: CoreGraphics.CGRect, collectionViewLayout layout: UIKit.UICollectionViewLayout)
+  @_Concurrency.MainActor(unsafe) @objc required dynamic public init?(coder: Foundation.NSCoder)
+  @objc deinit
+}
+extension IMChat.UIChatCollectionView {
+  @_Concurrency.MainActor(unsafe) @objc override dynamic public var intrinsicContentSize: CoreGraphics.CGSize {
+    @_Concurrency.MainActor(unsafe) @objc get
+  }
+  @_Concurrency.MainActor(unsafe) @objc override dynamic public func layoutSubviews()
+  @_Concurrency.MainActor(unsafe) @objc override dynamic public func reloadData()
+}
+extension IMChat.UIChatCollectionView {
+  @_Concurrency.MainActor(unsafe) public func reloadData(withNewMessages messages: [IMChat.ChatMessage])
+  @_Concurrency.MainActor(unsafe) public func reloadData(withNewMessage message: IMChat.ChatMessage)
+  @_Concurrency.MainActor(unsafe) public func reload()
+}
+public protocol ChatCollectionViewDataSource : AnyObject {
+  var chatMessages: [IMChat.ChatMessage] { get set }
+  func numberOfSections(in collectionView: UIKit.UICollectionView) -> Swift.Int
+  func collectionView(_ collectionView: UIKit.UICollectionView, numberOfItemsInSection section: Swift.Int) -> Swift.Int
+  func collectionView(_ collectionView: UIKit.UICollectionView, cellForItemAt indexPath: Foundation.IndexPath) -> IMChat.ChatMessage?
+  func collectionView(_ collectionView: UIKit.UICollectionView, messagesInSection section: Swift.Int) -> [IMChat.ChatMessage]
+  func collectionView(_ collectionView: UIKit.UICollectionView, setMessagesInSection messages: [IMChat.ChatMessage])
+}
+public enum CallbackQueue {
+  case mainAsync
+  case mainCurrentOrAsync
+  case untouch
+  case dispatch(Dispatch.DispatchQueue)
+  public func execute(_ block: @escaping () -> Swift.Void)
+}
+public protocol Placeholder {
+  func add(to imageView: IMChat.KFCrossPlatformImageView)
+  func remove(from imageView: IMChat.KFCrossPlatformImageView)
+}
+extension UIKit.UIImage : IMChat.Placeholder {
+  public func add(to imageView: IMChat.KFCrossPlatformImageView)
+  public func remove(from imageView: IMChat.KFCrossPlatformImageView)
+}
+extension IMChat.Placeholder where Self : UIKit.UIView {
+  public func add(to imageView: IMChat.KFCrossPlatformImageView)
+  public func remove(from imageView: IMChat.KFCrossPlatformImageView)
+}
+public enum DiskStorage {
+  @_hasMissingDesignatedInitializers public class Backend<T> where T : IMChat.DataTransformable {
+    public var config: IMChat.DiskStorage.Config
+    final public let directoryURL: Foundation.URL
+    convenience public init(config: IMChat.DiskStorage.Config) throws
+    public func cacheFileURL(forKey key: Swift.String) -> Foundation.URL
+    @objc deinit
+  }
+}
+extension IMChat.DiskStorage {
+  public struct Config {
+    public var sizeLimit: Swift.UInt
+    public var expiration: IMChat.StorageExpiration
+    public var pathExtension: Swift.String?
+    public var usesHashedFileName: Swift.Bool
+    public init(name: Swift.String, sizeLimit: Swift.UInt, fileManager: Foundation.FileManager = .default, directory: Foundation.URL? = nil)
+  }
+}
+extension Swift.String : IMChat.KingfisherCompatibleValue {
+}
+@available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *)
+public struct KFImage : SwiftUI.View {
+  @available(*, deprecated, message: "Some options are not available in SwiftUI yet. Use `KFImage(source:isLoaded:)` to create a `KFImage` and configure the options through modifier instead.")
+  public init(source: IMChat.Source?, options: IMChat.KingfisherOptionsInfo? = nil, isLoaded: SwiftUI.Binding<Swift.Bool> = .constant(false))
+  public init(source: IMChat.Source?, isLoaded: SwiftUI.Binding<Swift.Bool> = .constant(false))
+  public init(_ url: Foundation.URL?, isLoaded: SwiftUI.Binding<Swift.Bool> = .constant(false))
+  @_Concurrency.MainActor(unsafe) public var body: some SwiftUI.View {
+    get
+  }
+  public typealias Body = @_opaqueReturnTypeOf("$s6IMChat7KFImageV4bodyQrvp", 0) __
+}
+@available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *)
+extension IMChat.KFImage {
+  public func configure(_ block: @escaping (SwiftUI.Image) -> SwiftUI.Image) -> IMChat.KFImage
+  public func resizable(capInsets: SwiftUI.EdgeInsets = EdgeInsets(), resizingMode: SwiftUI.Image.ResizingMode = .stretch) -> IMChat.KFImage
+  public func renderingMode(_ renderingMode: SwiftUI.Image.TemplateRenderingMode?) -> IMChat.KFImage
+  public func interpolation(_ interpolation: SwiftUI.Image.Interpolation) -> IMChat.KFImage
+  public func antialiased(_ isAntialiased: Swift.Bool) -> IMChat.KFImage
+}
+extension IMChat.ChatCollectionViewDataSource {
+  public func numberOfSections(in collectionView: UIKit.UICollectionView) -> Swift.Int
+  public func collectionView(_ collectionView: UIKit.UICollectionView, numberOfItemsInSection section: Swift.Int) -> Swift.Int
+  public func collectionView(_ collectionView: UIKit.UICollectionView, messagesInSection section: Swift.Int) -> [IMChat.ChatMessage]
+  public func collectionView(_ collectionView: UIKit.UICollectionView, setMessagesInSection messages: [IMChat.ChatMessage])
+}
+public struct ImageLoadingResult {
+  public let image: IMChat.KFCrossPlatformImage
+  public let url: Foundation.URL?
+  public let originalData: Foundation.Data
+}
+public struct DownloadTask {
+  public let sessionTask: IMChat.SessionDataTask
+  public let cancelToken: IMChat.SessionDataTask.CancelToken
+  public func cancel()
+}
+open class ImageDownloader {
+  public static let `default`: IMChat.ImageDownloader
+  open var downloadTimeout: Swift.Double
+  open var trustedHosts: Swift.Set<Swift.String>?
+  open var sessionConfiguration: Foundation.URLSessionConfiguration {
+    get
+    set
+  }
+  open var requestsUsePipelining: Swift.Bool
+  weak open var delegate: IMChat.ImageDownloaderDelegate?
+  weak open var authenticationChallengeResponder: IMChat.AuthenticationChallengeResponsable?
+  public init(name: Swift.String)
+  @objc deinit
+  @discardableResult
+  open func downloadImage(with url: Foundation.URL, options: IMChat.KingfisherParsedOptionsInfo, completionHandler: ((Swift.Result<IMChat.ImageLoadingResult, IMChat.KingfisherError>) -> Swift.Void)? = nil) -> IMChat.DownloadTask?
+  @discardableResult
+  open func downloadImage(with url: Foundation.URL, options: IMChat.KingfisherOptionsInfo? = nil, progressBlock: IMChat.DownloadProgressBlock? = nil, completionHandler: ((Swift.Result<IMChat.ImageLoadingResult, IMChat.KingfisherError>) -> Swift.Void)? = nil) -> IMChat.DownloadTask?
+  @discardableResult
+  open func downloadImage(with url: Foundation.URL, options: IMChat.KingfisherOptionsInfo? = nil, completionHandler: ((Swift.Result<IMChat.ImageLoadingResult, IMChat.KingfisherError>) -> Swift.Void)? = nil) -> IMChat.DownloadTask?
+}
+extension IMChat.ImageDownloader {
+  public func cancelAll()
+  public func cancel(url: Foundation.URL)
+}
+extension IMChat.ImageDownloader : IMChat.AuthenticationChallengeResponsable {
+}
+extension IMChat.ImageDownloader : IMChat.ImageDownloaderDelegate {
+}
+extension Foundation.NSNotification.Name {
+  public static let KingfisherDidCleanDiskCache: Foundation.Notification.Name
+}
+public let KingfisherDiskCacheCleanedHashKey: Swift.String
+public enum CacheType {
+  case none
+  case memory
+  case disk
+  public var cached: Swift.Bool {
+    get
+  }
+  public static func == (a: IMChat.CacheType, b: IMChat.CacheType) -> Swift.Bool
+  public func hash(into hasher: inout Swift.Hasher)
+  public var hashValue: Swift.Int {
+    get
+  }
+}
+public struct CacheStoreResult {
+  public let memoryCacheResult: Swift.Result<(), Swift.Never>
+  public let diskCacheResult: Swift.Result<(), IMChat.KingfisherError>
+}
+extension UIKit.UIImage : IMChat.CacheCostCalculable {
+  public var cacheCost: Swift.Int {
+    get
+  }
+}
+extension Foundation.Data : IMChat.DataTransformable {
+  public func toData() throws -> Foundation.Data
+  public static func fromData(_ data: Foundation.Data) throws -> Foundation.Data
+  public static let empty: Foundation.Data
+}
+public enum ImageCacheResult {
+  case disk(IMChat.KFCrossPlatformImage)
+  case memory(IMChat.KFCrossPlatformImage)
+  case none
+  public var image: IMChat.KFCrossPlatformImage? {
+    get
+  }
+  public var cacheType: IMChat.CacheType {
+    get
+  }
+}
+open class ImageCache {
+  public static let `default`: IMChat.ImageCache
+  final public let memoryStorage: IMChat.MemoryStorage.Backend<IMChat.KFCrossPlatformImage>
+  final public let diskStorage: IMChat.DiskStorage.Backend<Foundation.Data>
+  public typealias DiskCachePathClosure = (Foundation.URL, Swift.String) -> Foundation.URL
+  public init(memoryStorage: IMChat.MemoryStorage.Backend<IMChat.KFCrossPlatformImage>, diskStorage: IMChat.DiskStorage.Backend<Foundation.Data>)
+  convenience public init(name: Swift.String)
+  convenience public init(name: Swift.String, cacheDirectoryURL: Foundation.URL?, diskCachePathClosure: IMChat.ImageCache.DiskCachePathClosure? = nil) throws
+  @objc deinit
+  open func store(_ image: IMChat.KFCrossPlatformImage, original: Foundation.Data? = nil, forKey key: Swift.String, options: IMChat.KingfisherParsedOptionsInfo, toDisk: Swift.Bool = true, completionHandler: ((IMChat.CacheStoreResult) -> Swift.Void)? = nil)
+  open func store(_ image: IMChat.KFCrossPlatformImage, original: Foundation.Data? = nil, forKey key: Swift.String, processorIdentifier identifier: Swift.String = "", cacheSerializer serializer: IMChat.CacheSerializer = DefaultCacheSerializer.default, toDisk: Swift.Bool = true, callbackQueue: IMChat.CallbackQueue = .untouch, completionHandler: ((IMChat.CacheStoreResult) -> Swift.Void)? = nil)
+  open func storeToDisk(_ data: Foundation.Data, forKey key: Swift.String, processorIdentifier identifier: Swift.String = "", expiration: IMChat.StorageExpiration? = nil, callbackQueue: IMChat.CallbackQueue = .untouch, completionHandler: ((IMChat.CacheStoreResult) -> Swift.Void)? = nil)
+  open func removeImage(forKey key: Swift.String, processorIdentifier identifier: Swift.String = "", fromMemory: Swift.Bool = true, fromDisk: Swift.Bool = true, callbackQueue: IMChat.CallbackQueue = .untouch, completionHandler: (() -> Swift.Void)? = nil)
+  open func retrieveImage(forKey key: Swift.String, options: IMChat.KingfisherOptionsInfo? = nil, callbackQueue: IMChat.CallbackQueue = .mainCurrentOrAsync, completionHandler: ((Swift.Result<IMChat.ImageCacheResult, IMChat.KingfisherError>) -> Swift.Void)?)
+  open func retrieveImageInMemoryCache(forKey key: Swift.String, options: IMChat.KingfisherOptionsInfo? = nil) -> IMChat.KFCrossPlatformImage?
+  open func retrieveImageInDiskCache(forKey key: Swift.String, options: IMChat.KingfisherOptionsInfo? = nil, callbackQueue: IMChat.CallbackQueue = .untouch, completionHandler: @escaping (Swift.Result<IMChat.KFCrossPlatformImage?, IMChat.KingfisherError>) -> Swift.Void)
+  public func clearCache(completion handler: (() -> Swift.Void)? = nil)
+  @objc public func clearMemoryCache()
+  open func clearDiskCache(completion handler: (() -> Swift.Void)? = nil)
+  open func cleanExpiredCache(completion handler: (() -> Swift.Void)? = nil)
+  open func cleanExpiredMemoryCache()
+  open func cleanExpiredDiskCache(completion handler: (() -> Swift.Void)? = nil)
+  @objc public func backgroundCleanExpiredDiskCache()
+  open func imageCachedType(forKey key: Swift.String, processorIdentifier identifier: Swift.String = DefaultImageProcessor.default.identifier) -> IMChat.CacheType
+  public func isCached(forKey key: Swift.String, processorIdentifier identifier: Swift.String = DefaultImageProcessor.default.identifier) -> Swift.Bool
+  open func hash(forKey key: Swift.String, processorIdentifier identifier: Swift.String = DefaultImageProcessor.default.identifier) -> Swift.String
+  open func calculateDiskStorageSize(completion handler: @escaping ((Swift.Result<Swift.UInt, IMChat.KingfisherError>) -> Swift.Void))
+  open func cachePath(forKey key: Swift.String, processorIdentifier identifier: Swift.String = DefaultImageProcessor.default.identifier) -> Swift.String
+}
+extension UIKit.UIApplication : IMChat.KingfisherCompatible {
+}
+extension IMChat.KingfisherWrapper where Base : UIKit.UIApplication {
+  public static var shared: UIKit.UIApplication? {
+    get
+  }
+}
+public protocol Resource {
+  var cacheKey: Swift.String { get }
+  var downloadURL: Foundation.URL { get }
+}
+extension IMChat.Resource {
+  public func convertToSource(overrideCacheKey: Swift.String? = nil) -> IMChat.Source
+}
+public struct ImageResource : IMChat.Resource {
+  public init(downloadURL: Foundation.URL, cacheKey: Swift.String? = nil)
+  public let cacheKey: Swift.String
+  public let downloadURL: Foundation.URL
+}
+extension Foundation.URL : IMChat.Resource {
+  public var cacheKey: Swift.String {
+    get
+  }
+  public var downloadURL: Foundation.URL {
+    get
+  }
+}
+public enum MemoryStorage {
+  public class Backend<T> where T : IMChat.CacheCostCalculable {
+    public var config: IMChat.MemoryStorage.Config {
+      get
+      set
+    }
+    public init(config: IMChat.MemoryStorage.Config)
+    @objc deinit
+  }
+}
+extension IMChat.MemoryStorage {
+  public struct Config {
+    public var totalCostLimit: Swift.Int
+    public var countLimit: Swift.Int
+    public var expiration: IMChat.StorageExpiration
+    public let cleanInterval: Foundation.TimeInterval
+    public init(totalCostLimit: Swift.Int, cleanInterval: Foundation.TimeInterval = 120)
+  }
+}
+extension IMChat.KingfisherWrapper where Base : UIKit.NSTextAttachment {
+  @discardableResult
+  public func setImage(with source: IMChat.Source?, attributedView: IMChat.KFCrossPlatformView, placeholder: IMChat.KFCrossPlatformImage? = nil, options: IMChat.KingfisherOptionsInfo? = nil, progressBlock: IMChat.DownloadProgressBlock? = nil, completionHandler: ((Swift.Result<IMChat.RetrieveImageResult, IMChat.KingfisherError>) -> Swift.Void)? = nil) -> IMChat.DownloadTask?
+  @discardableResult
+  public func setImage(with resource: IMChat.Resource?, attributedView: IMChat.KFCrossPlatformView, placeholder: IMChat.KFCrossPlatformImage? = nil, options: IMChat.KingfisherOptionsInfo? = nil, progressBlock: IMChat.DownloadProgressBlock? = nil, completionHandler: ((Swift.Result<IMChat.RetrieveImageResult, IMChat.KingfisherError>) -> Swift.Void)? = nil) -> IMChat.DownloadTask?
+  public func cancelDownloadTask()
+}
+extension IMChat.KingfisherWrapper where Base : UIKit.NSTextAttachment {
+  public var taskIdentifier: IMChat.Source.Identifier.Value? {
+    get
+  }
+}
+public protocol ImageDataProvider {
+  var cacheKey: Swift.String { get }
+  func data(handler: @escaping (Swift.Result<Foundation.Data, Swift.Error>) -> Swift.Void)
+  var contentURL: Foundation.URL? { get }
+}
+extension IMChat.ImageDataProvider {
+  public var contentURL: Foundation.URL? {
+    get
+  }
+  public func convertToSource() -> IMChat.Source
+}
+public struct LocalFileImageDataProvider : IMChat.ImageDataProvider {
+  public let fileURL: Foundation.URL
+  public init(fileURL: Foundation.URL, cacheKey: Swift.String? = nil)
+  public var cacheKey: Swift.String
+  public func data(handler: (Swift.Result<Foundation.Data, Swift.Error>) -> Swift.Void)
+  public var contentURL: Foundation.URL? {
+    get
+  }
+}
+public struct Base64ImageDataProvider : IMChat.ImageDataProvider {
+  public let base64String: Swift.String
+  public init(base64String: Swift.String, cacheKey: Swift.String)
+  public var cacheKey: Swift.String
+  public func data(handler: (Swift.Result<Foundation.Data, Swift.Error>) -> Swift.Void)
+}
+public struct RawImageDataProvider : IMChat.ImageDataProvider {
+  public let data: Foundation.Data
+  public init(data: Foundation.Data, cacheKey: Swift.String)
+  public var cacheKey: Swift.String
+  public func data(handler: @escaping (Swift.Result<Foundation.Data, Swift.Error>) -> Swift.Void)
+}
+@available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *)
+extension IMChat.KFImage {
+  public static func source(_ source: IMChat.Source?, isLoaded: SwiftUI.Binding<Swift.Bool> = .constant(false)) -> IMChat.KFImage
+  public static func resource(_ resource: IMChat.Resource?, isLoaded: SwiftUI.Binding<Swift.Bool> = .constant(false)) -> IMChat.KFImage
+  public static func url(_ url: Foundation.URL?, cacheKey: Swift.String? = nil, isLoaded: SwiftUI.Binding<Swift.Bool> = .constant(false)) -> IMChat.KFImage
+  public static func dataProvider(_ provider: IMChat.ImageDataProvider?, isLoaded: SwiftUI.Binding<Swift.Bool> = .constant(false)) -> IMChat.KFImage
+  public static func data(_ data: Foundation.Data?, cacheKey: Swift.String, isLoaded: SwiftUI.Binding<Swift.Bool> = .constant(false)) -> IMChat.KFImage
+}
+@available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *)
+extension IMChat.KFImage {
+  public func placeholder<Content>(@SwiftUI.ViewBuilder _ content: () -> Content) -> IMChat.KFImage where Content : SwiftUI.View
+  public func cancelOnDisappear(_ flag: Swift.Bool) -> IMChat.KFImage
+  public func fade(duration: Foundation.TimeInterval) -> IMChat.KFImage
+}
+public protocol InputBarViewDelegate : ObjectiveC.NSObjectProtocol {
+  func InputBarView(inputBar: IMChat.InputBarView, didPickImage image: UIKit.UIImage?)
+  func InputBarView(inputBar: IMChat.InputBarView, didPickImageURL url: Foundation.URL?)
+  func InputBarView(inputBar: IMChat.InputBarView, didWriteText text: Swift.String?)
+  func InputBarView(inputBar: IMChat.InputBarView, didPickLocation point: CoreLocation.CLLocationCoordinate2D?)
+  func InputBarView(inputBar: IMChat.InputBarView, didPickRecord record: Foundation.URL?)
+  func InputBarView(inputBar: IMChat.InputBarView, didOpenKeyboard keyboard: Swift.Bool?)
+  func InputBarView(inputBar: IMChat.InputBarView, didCloseKeyboard keyboard: Swift.Bool?)
+  func InputBarView(inputBar: IMChat.InputBarView) -> UIKit.UIViewController?
+}
+extension IMChat.InputBarViewDelegate {
+  public func InputBarView(inputBar: IMChat.InputBarView, didPickImage image: UIKit.UIImage?)
+  public func InputBarView(inputBar: IMChat.InputBarView, didPickImageURL url: Foundation.URL?)
+  public func InputBarView(inputBar: IMChat.InputBarView, didWriteText text: Swift.String?)
+  public func InputBarView(inputBar: IMChat.InputBarView, didPickLocation point: CoreLocation.CLLocationCoordinate2D?)
+  public func InputBarView(inputBar: IMChat.InputBarView, didPickRecord record: Foundation.URL?)
+  public func InputBarView(inputBar: IMChat.InputBarView, didOpenKeyboard keyboard: Swift.Bool?)
+  public func InputBarView(inputBar: IMChat.InputBarView, didCloseKeyboard keyboard: Swift.Bool?)
+}
+extension IMChat.KingfisherWrapper where Base : UIKit.UIImageView {
+  @discardableResult
+  public func setImage(with source: IMChat.Source?, placeholder: IMChat.Placeholder? = nil, options: IMChat.KingfisherOptionsInfo? = nil, progressBlock: IMChat.DownloadProgressBlock? = nil, completionHandler: ((Swift.Result<IMChat.RetrieveImageResult, IMChat.KingfisherError>) -> Swift.Void)? = nil) -> IMChat.DownloadTask?
+  @discardableResult
+  public func setImage(with source: IMChat.Source?, placeholder: IMChat.Placeholder? = nil, options: IMChat.KingfisherOptionsInfo? = nil, completionHandler: ((Swift.Result<IMChat.RetrieveImageResult, IMChat.KingfisherError>) -> Swift.Void)? = nil) -> IMChat.DownloadTask?
+  @discardableResult
+  public func setImage(with resource: IMChat.Resource?, placeholder: IMChat.Placeholder? = nil, options: IMChat.KingfisherOptionsInfo? = nil, progressBlock: IMChat.DownloadProgressBlock? = nil, completionHandler: ((Swift.Result<IMChat.RetrieveImageResult, IMChat.KingfisherError>) -> Swift.Void)? = nil) -> IMChat.DownloadTask?
+  @discardableResult
+  public func setImage(with resource: IMChat.Resource?, placeholder: IMChat.Placeholder? = nil, options: IMChat.KingfisherOptionsInfo? = nil, completionHandler: ((Swift.Result<IMChat.RetrieveImageResult, IMChat.KingfisherError>) -> Swift.Void)? = nil) -> IMChat.DownloadTask?
+  @discardableResult
+  public func setImage(with provider: IMChat.ImageDataProvider?, placeholder: IMChat.Placeholder? = nil, options: IMChat.KingfisherOptionsInfo? = nil, progressBlock: IMChat.DownloadProgressBlock? = nil, completionHandler: ((Swift.Result<IMChat.RetrieveImageResult, IMChat.KingfisherError>) -> Swift.Void)? = nil) -> IMChat.DownloadTask?
+  @discardableResult
+  public func setImage(with provider: IMChat.ImageDataProvider?, placeholder: IMChat.Placeholder? = nil, options: IMChat.KingfisherOptionsInfo? = nil, completionHandler: ((Swift.Result<IMChat.RetrieveImageResult, IMChat.KingfisherError>) -> Swift.Void)? = nil) -> IMChat.DownloadTask?
+  public func cancelDownloadTask()
+}
+extension IMChat.KingfisherWrapper where Base : UIKit.UIImageView {
+  public var taskIdentifier: IMChat.Source.Identifier.Value? {
+    get
+  }
+  public var indicatorType: IMChat.IndicatorType {
+    get
+    set
+  }
+  public var indicator: IMChat.Indicator? {
+    get
+  }
+  public var placeholder: IMChat.Placeholder? {
+    get
+  }
+}
+public enum ImageProcessItem {
+  case image(IMChat.KFCrossPlatformImage)
+  case data(Foundation.Data)
+}
+public protocol ImageProcessor {
+  var identifier: Swift.String { get }
+  func process(item: IMChat.ImageProcessItem, options: IMChat.KingfisherParsedOptionsInfo) -> IMChat.KFCrossPlatformImage?
+}
+extension IMChat.ImageProcessor {
+  public func append(another: IMChat.ImageProcessor) -> IMChat.ImageProcessor
+}
+public struct DefaultImageProcessor : IMChat.ImageProcessor {
+  public static let `default`: IMChat.DefaultImageProcessor
+  public let identifier: Swift.String
+  public init()
+  public func process(item: IMChat.ImageProcessItem, options: IMChat.KingfisherParsedOptionsInfo) -> IMChat.KFCrossPlatformImage?
+}
+public struct RectCorner : Swift.OptionSet {
+  public let rawValue: Swift.Int
+  public static let topLeft: IMChat.RectCorner
+  public static let topRight: IMChat.RectCorner
+  public static let bottomLeft: IMChat.RectCorner
+  public static let bottomRight: IMChat.RectCorner
+  public static let all: IMChat.RectCorner
+  public init(rawValue: Swift.Int)
+  public typealias ArrayLiteralElement = IMChat.RectCorner
+  public typealias Element = IMChat.RectCorner
+  public typealias RawValue = Swift.Int
+}
+public struct BlendImageProcessor : IMChat.ImageProcessor {
+  public let identifier: Swift.String
+  public let blendMode: CoreGraphics.CGBlendMode
+  public let alpha: CoreGraphics.CGFloat
+  public let backgroundColor: IMChat.KFCrossPlatformColor?
+  public init(blendMode: CoreGraphics.CGBlendMode, alpha: CoreGraphics.CGFloat = 1.0, backgroundColor: IMChat.KFCrossPlatformColor? = nil)
+  public func process(item: IMChat.ImageProcessItem, options: IMChat.KingfisherParsedOptionsInfo) -> IMChat.KFCrossPlatformImage?
+}
+public struct RoundCornerImageProcessor : IMChat.ImageProcessor {
+  public enum Radius {
+    case widthFraction(CoreGraphics.CGFloat)
+    case heightFraction(CoreGraphics.CGFloat)
+    case point(CoreGraphics.CGFloat)
+  }
+  public let identifier: Swift.String
+  public let radius: IMChat.RoundCornerImageProcessor.Radius
+  public let roundingCorners: IMChat.RectCorner
+  public let targetSize: CoreGraphics.CGSize?
+  public let backgroundColor: IMChat.KFCrossPlatformColor?
+  public init(cornerRadius: CoreGraphics.CGFloat, targetSize: CoreGraphics.CGSize? = nil, roundingCorners corners: IMChat.RectCorner = .all, backgroundColor: IMChat.KFCrossPlatformColor? = nil)
+  public init(radius: IMChat.RoundCornerImageProcessor.Radius, targetSize: CoreGraphics.CGSize? = nil, roundingCorners corners: IMChat.RectCorner = .all, backgroundColor: IMChat.KFCrossPlatformColor? = nil)
+  public func process(item: IMChat.ImageProcessItem, options: IMChat.KingfisherParsedOptionsInfo) -> IMChat.KFCrossPlatformImage?
+}
+public enum ContentMode {
+  case none
+  case aspectFit
+  case aspectFill
+  public static func == (a: IMChat.ContentMode, b: IMChat.ContentMode) -> Swift.Bool
+  public func hash(into hasher: inout Swift.Hasher)
+  public var hashValue: Swift.Int {
+    get
+  }
+}
+public struct ResizingImageProcessor : IMChat.ImageProcessor {
+  public let identifier: Swift.String
+  public let referenceSize: CoreGraphics.CGSize
+  public let targetContentMode: IMChat.ContentMode
+  public init(referenceSize: CoreGraphics.CGSize, mode: IMChat.ContentMode = .none)
+  public func process(item: IMChat.ImageProcessItem, options: IMChat.KingfisherParsedOptionsInfo) -> IMChat.KFCrossPlatformImage?
+}
+public struct BlurImageProcessor : IMChat.ImageProcessor {
+  public let identifier: Swift.String
+  public let blurRadius: CoreGraphics.CGFloat
+  public init(blurRadius: CoreGraphics.CGFloat)
+  public func process(item: IMChat.ImageProcessItem, options: IMChat.KingfisherParsedOptionsInfo) -> IMChat.KFCrossPlatformImage?
+}
+public struct OverlayImageProcessor : IMChat.ImageProcessor {
+  public let identifier: Swift.String
+  public let overlay: IMChat.KFCrossPlatformColor
+  public let fraction: CoreGraphics.CGFloat
+  public init(overlay: IMChat.KFCrossPlatformColor, fraction: CoreGraphics.CGFloat = 0.5)
+  public func process(item: IMChat.ImageProcessItem, options: IMChat.KingfisherParsedOptionsInfo) -> IMChat.KFCrossPlatformImage?
+}
+public struct TintImageProcessor : IMChat.ImageProcessor {
+  public let identifier: Swift.String
+  public let tint: IMChat.KFCrossPlatformColor
+  public init(tint: IMChat.KFCrossPlatformColor)
+  public func process(item: IMChat.ImageProcessItem, options: IMChat.KingfisherParsedOptionsInfo) -> IMChat.KFCrossPlatformImage?
+}
+public struct ColorControlsProcessor : IMChat.ImageProcessor {
+  public let identifier: Swift.String
+  public let brightness: CoreGraphics.CGFloat
+  public let contrast: CoreGraphics.CGFloat
+  public let saturation: CoreGraphics.CGFloat
+  public let inputEV: CoreGraphics.CGFloat
+  public init(brightness: CoreGraphics.CGFloat, contrast: CoreGraphics.CGFloat, saturation: CoreGraphics.CGFloat, inputEV: CoreGraphics.CGFloat)
+  public func process(item: IMChat.ImageProcessItem, options: IMChat.KingfisherParsedOptionsInfo) -> IMChat.KFCrossPlatformImage?
+}
+public struct BlackWhiteProcessor : IMChat.ImageProcessor {
+  public let identifier: Swift.String
+  public init()
+  public func process(item: IMChat.ImageProcessItem, options: IMChat.KingfisherParsedOptionsInfo) -> IMChat.KFCrossPlatformImage?
+}
+public struct CroppingImageProcessor : IMChat.ImageProcessor {
+  public let identifier: Swift.String
+  public let size: CoreGraphics.CGSize
+  public let anchor: CoreGraphics.CGPoint
+  public init(size: CoreGraphics.CGSize, anchor: CoreGraphics.CGPoint = CGPoint(x: 0.5, y: 0.5))
+  public func process(item: IMChat.ImageProcessItem, options: IMChat.KingfisherParsedOptionsInfo) -> IMChat.KFCrossPlatformImage?
+}
+public struct DownsamplingImageProcessor : IMChat.ImageProcessor {
+  public let size: CoreGraphics.CGSize
+  public let identifier: Swift.String
+  public init(size: CoreGraphics.CGSize)
+  public func process(item: IMChat.ImageProcessItem, options: IMChat.KingfisherParsedOptionsInfo) -> IMChat.KFCrossPlatformImage?
+}
+infix operator |> : AdditionPrecedence
+public func |> (left: IMChat.ImageProcessor, right: IMChat.ImageProcessor) -> IMChat.ImageProcessor
+public class Delegate<Input, Output> {
+  public init()
+  public func delegate<T>(on target: T, block: ((T, Input) -> Output)?) where T : AnyObject
+  public func call(_ input: Input) -> Output?
+  public func callAsFunction(_ input: Input) -> Output?
+  @objc deinit
+}
+extension IMChat.Delegate where Input == Swift.Void {
+  public func call() -> Output?
+  public func callAsFunction() -> Output?
+}
+extension IMChat.Delegate where Input == Swift.Void, Output : IMChat.OptionalProtocol {
+  public func call() -> Output
+  public func callAsFunction() -> Output
+}
+extension IMChat.Delegate where Output : IMChat.OptionalProtocol {
+  public func call(_ input: Input) -> Output
+  public func callAsFunction(_ input: Input) -> Output
+}
+public protocol OptionalProtocol {
+  static var _createNil: Self { get }
+}
+extension Swift.Optional : IMChat.OptionalProtocol {
+  public static var _createNil: Swift.Optional<Wrapped> {
+    get
+  }
+}
+public protocol ImageDownloadRedirectHandler {
+  func handleHTTPRedirection(for task: IMChat.SessionDataTask, response: Foundation.HTTPURLResponse, newRequest: Foundation.URLRequest, completionHandler: @escaping (Foundation.URLRequest?) -> Swift.Void)
+}
+public struct AnyRedirectHandler : IMChat.ImageDownloadRedirectHandler {
+  public func handleHTTPRedirection(for task: IMChat.SessionDataTask, response: Foundation.HTTPURLResponse, newRequest: Foundation.URLRequest, completionHandler: @escaping (Foundation.URLRequest?) -> Swift.Void)
+  public init(handle: @escaping (IMChat.SessionDataTask, Foundation.HTTPURLResponse, Foundation.URLRequest, @escaping (Foundation.URLRequest?) -> Swift.Void) -> Swift.Void)
+}
+@objc @_inheritsConvenienceInitializers @_hasMissingDesignatedInitializers @IBDesignable @_Concurrency.MainActor(unsafe) public class InputBarView : UIKit.UIView {
+  @objc @IBOutlet @_Concurrency.MainActor(unsafe) weak public var inputHeight: UIKit.NSLayoutConstraint!
+  @_Concurrency.MainActor(unsafe) weak public var delegate: IMChat.InputBarViewDelegate?
+  @_Concurrency.MainActor(unsafe) public var textViewLocalizedString: Swift.String {
+    get
+    set
+  }
+  @objc deinit
+}
+extension IMChat.InputBarView : UIKit.UITextViewDelegate {
+  @_Concurrency.MainActor(unsafe) @objc dynamic public func textViewDidEndEditing(_ textView: UIKit.UITextView)
+  @_Concurrency.MainActor(unsafe) @objc dynamic public func textViewDidBeginEditing(_ textView: UIKit.UITextView)
+  @_Concurrency.MainActor(unsafe) @objc dynamic public func textViewDidChange(_ textView: UIKit.UITextView)
+}
+public enum StorageExpiration {
+  case never
+  case seconds(Foundation.TimeInterval)
+  case days(Swift.Int)
+  case date(Foundation.Date)
+  case expired
+}
+public enum ExpirationExtending {
+  case none
+  case cacheTime
+  case expirationTime(_: IMChat.StorageExpiration)
+}
+public protocol CacheCostCalculable {
+  var cacheCost: Swift.Int { get }
+}
+public protocol DataTransformable {
+  func toData() throws -> Foundation.Data
+  static func fromData(_ data: Foundation.Data) throws -> Self
+  static var empty: Self { get }
+}
+public protocol ChatCollectionViewDelegate : AnyObject {
+  func collectionView(_ collectionView: UIKit.UICollectionView, didSelectItemAt indexPath: Foundation.IndexPath)
+  func collectionView(_ scrollView: UIKit.UIScrollView, reloadTheTop decelerate: Swift.Bool)
+}
+public protocol ChatMessage : Swift.Decodable, Swift.Encodable {
+  var kind: IMChat.Chat.Kind? { get set }
+  var fromYou: Swift.Bool? { get set }
+  var date: Swift.String? { get set }
+}
+public protocol ChatMessageImage : IMChat.ChatMessage {
+  var image: Swift.String? { get set }
+}
+extension Swift.Array {
+  public func transform<T>(_ model: T.Type) -> [T] where T : Swift.Decodable, T : Swift.Encodable
+}
+extension CoreGraphics.CGSize : IMChat.KingfisherCompatibleValue {
+}
+extension IMChat.KingfisherWrapper where Base == CoreGraphics.CGSize {
+  public func resize(to size: CoreGraphics.CGSize, for contentMode: IMChat.ContentMode) -> CoreGraphics.CGSize
+  public func constrained(_ size: CoreGraphics.CGSize) -> CoreGraphics.CGSize
+  public func filling(_ size: CoreGraphics.CGSize) -> CoreGraphics.CGSize
+  public func constrainedRect(for size: CoreGraphics.CGSize, anchor: CoreGraphics.CGPoint) -> CoreGraphics.CGRect
+}
+public struct FormatIndicatedCacheSerializer : IMChat.CacheSerializer {
+  public static let png: IMChat.FormatIndicatedCacheSerializer
+  public static let jpeg: IMChat.FormatIndicatedCacheSerializer
+  public static func jpeg(compressionQuality: CoreGraphics.CGFloat) -> IMChat.FormatIndicatedCacheSerializer
+  public static let gif: IMChat.FormatIndicatedCacheSerializer
+  public func data(with image: IMChat.KFCrossPlatformImage, original: Foundation.Data?) -> Foundation.Data?
+  public func image(with data: Foundation.Data, options: IMChat.KingfisherParsedOptionsInfo) -> IMChat.KFCrossPlatformImage?
+}
+public typealias DownloadProgressBlock = ((_ receivedSize: Swift.Int64, _ totalSize: Swift.Int64) -> Swift.Void)
+public struct RetrieveImageResult {
+  public let image: IMChat.KFCrossPlatformImage
+  public let cacheType: IMChat.CacheType
+  public let source: IMChat.Source
+  public let originalSource: IMChat.Source
+}
+public struct PropagationError {
+  public let source: IMChat.Source
+  public let error: IMChat.KingfisherError
+}
+public typealias DownloadTaskUpdatedBlock = ((_ newTask: IMChat.DownloadTask?) -> Swift.Void)
+public class KingfisherManager {
+  public static let shared: IMChat.KingfisherManager
+  public var cache: IMChat.ImageCache
+  public var downloader: IMChat.ImageDownloader
+  public var defaultOptions: IMChat.KingfisherOptionsInfo
+  public init(downloader: IMChat.ImageDownloader, cache: IMChat.ImageCache)
+  @discardableResult
+  public func retrieveImage(with resource: IMChat.Resource, options: IMChat.KingfisherOptionsInfo? = nil, progressBlock: IMChat.DownloadProgressBlock? = nil, downloadTaskUpdated: IMChat.DownloadTaskUpdatedBlock? = nil, completionHandler: ((Swift.Result<IMChat.RetrieveImageResult, IMChat.KingfisherError>) -> Swift.Void)?) -> IMChat.DownloadTask?
+  public func retrieveImage(with source: IMChat.Source, options: IMChat.KingfisherOptionsInfo? = nil, progressBlock: IMChat.DownloadProgressBlock? = nil, downloadTaskUpdated: IMChat.DownloadTaskUpdatedBlock? = nil, completionHandler: ((Swift.Result<IMChat.RetrieveImageResult, IMChat.KingfisherError>) -> Swift.Void)?) -> IMChat.DownloadTask?
+  @objc deinit
+}
+public struct Chat {
+  public enum Direction {
+    case left
+    case right
+    public static func == (a: IMChat.Chat.Direction, b: IMChat.Chat.Direction) -> Swift.Bool
+    public func hash(into hasher: inout Swift.Hasher)
+    public var hashValue: Swift.Int {
+      get
+    }
+  }
+  public enum Kind : Swift.Codable, Swift.Equatable {
+    public static func == (lhs: IMChat.Chat.Kind, rhs: IMChat.Chat.Kind) -> Swift.Bool
+    case text(Swift.String?)
+    case image(Swift.String?)
+    case location(Swift.Double?, Swift.Double?)
+    case record(Swift.String?)
+    case localImage(UIKit.UIImage?)
+    public init(from decoder: Swift.Decoder) throws
+    public func encode(to encoder: Swift.Encoder) throws
+  }
+}
+public protocol VoiceRecordMessage {
+  var recordURL: Foundation.URL? { get set }
+  var seconds: Swift.Int? { get set }
+  var duration: Swift.Int? { get set }
+}
+extension IMChat.ImageFormat : Swift.Equatable {}
+extension IMChat.ImageFormat : Swift.Hashable {}
+extension IMChat.CacheType : Swift.Equatable {}
+extension IMChat.CacheType : Swift.Hashable {}
+extension IMChat.ContentMode : Swift.Equatable {}
+extension IMChat.ContentMode : Swift.Hashable {}
+extension IMChat.Chat.Direction : Swift.Equatable {}
+extension IMChat.Chat.Direction : Swift.Hashable {}
